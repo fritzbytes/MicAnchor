@@ -64,9 +64,8 @@ works, but:
 
 - It has to be redone for every app you care about.
 - It has to be rebased on every upstream release.
-- **It is impossible for closed-source apps.** VACA (View Assist Companion App) cannot be patched
-  at all.
-
+- **It is impossible for closed-source apps.**
+  
 Mic Anchor fixes everything on the device at once, including closed-source apps.
 
 ---
