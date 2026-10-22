@@ -200,72 +200,9 @@ the build log for any release you download.
 
 ## Boot persistence
 
-`BootReceiver` handles `BOOT_COMPLETED` and works on most standard ROMs. However, if your launcher or kiosk environment is unreliable about delivering boot broadcasts, or if your companion voice application consistently grabs the microphone before Mic Anchor can initialize, you can enforce the startup sequence using an init script.
-
-### Launch Sequence Script (Magisk / KernelSU / APatch)
-
-If your device is rooted, place a boot service script in `/data/adb/service.d/` to guarantee Mic Anchor binds the audio hardware before launching your frontend voice or dashboard app.
-
-#### 1. Identify your companion app package
-
-Determine the package name of the application you want launched into the foreground after Mic Anchor binds the mic stream:
-
-| Application | Package Name |
-| :--- | :--- |
-| **VACA (View Assist Companion App)** | `com.msp1974.vacompanion` |
-| **Home Assistant Companion** | `io.homeassistant.companion.android` |
-| **Fully Kiosk Browser** | `de.ozerov.fully` |
-| **Wallpanel** | `com.thanksmister.iot.mqtt.alarmpanel` |
-
-*(To find the package name for a different app, run `adb shell pm list packages`)*.
-
-#### 2. Install the boot script
-
-Run the following command in an elevated root shell (`su`). If using an app other than VACA, update the `TARGET_APP` variable accordingly:
-
-```bash
-cat << 'EOF' > /data/adb/service.d/app_sequence.sh
-#!/system/bin/sh
-
-# 1. Wait until Android system boot is fully marked complete
-while [ "$(getprop sys.boot_completed)" != "1" ]; do
-    sleep 2
-done
-
-# 2. Allow system UI and core services to settle
-sleep 8
-
-# 3. Launch com.micanchor first
-monkey -p com.micanchor -c android.intent.category.LAUNCHER 1
-
-# 4. Actively wait until com.micanchor's process is running in memory
-TIMEOUT=30
-ELAPSED=0
-while ! pidof com.micanchor >/dev/null 2>&1 && [ $ELAPSED -lt $TIMEOUT ]; do
-    sleep 1
-    ELAPSED=$((ELAPSED + 1))
-done
-
-# 5. Buffer delay to allow com.micanchor to bind audio hooks / mic hardware
-sleep 4
-
-# 6. Launch your target foreground voice app (change package as needed)
-# Default below is VACA (View Assist Companion App)
-TARGET_APP="com.msp1974.vacompanion"
-monkey -p "$TARGET_APP" -c android.intent.category.LAUNCHER 1
-EOF
-```
-
-#### 3. Make the script executable
-
-`service.d` scripts must be executable (0755) or Magisk will skip them:
-
-```bash
-chmod 755 /data/adb/service.d/app_sequence.sh
-```
-
-A simpler script that only starts the Mic Anchor service (without launching a companion app) is
-also available in [`extras/`](extras/).
+`BootReceiver` handles `BOOT_COMPLETED` and works on most devices. If your launcher is unreliable
+about delivering boot broadcasts (some kiosk launchers are), and you have root, there's a Magisk
+`service.d` script in [`extras/`](extras/) as a backup.
 
 ## Notes and caveats
 
