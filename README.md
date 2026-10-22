@@ -241,7 +241,7 @@ monkey -p com.micanchor -c android.intent.category.LAUNCHER 1
 # 4. Actively wait until com.micanchor's process is running in memory
 TIMEOUT=30
 ELAPSED=0
-while ! pidof com.micanchor >/dev/null 2>&1 && [ $ELAPSED -lt$TIMEOUT ]; do
+while ! pidof com.micanchor >/dev/null 2>&1 && [ $ELAPSED -lt $TIMEOUT ]; do
     sleep 1
     ELAPSED=$((ELAPSED + 1))
 done
@@ -253,9 +253,19 @@ sleep 4
 # Default below is VACA (View Assist Companion App)
 TARGET_APP="com.msp1974.vacompanion"
 monkey -p "$TARGET_APP" -c android.intent.category.LAUNCHER 1
+EOF
+```
 
-# 6. Check permissions and make sure standard root ownership and executable (rwxr-xr-x / 0755) permissions
+#### 3. Make the script executable
 
+`service.d` scripts must be executable (0755) or Magisk will skip them:
+
+```bash
+chmod 755 /data/adb/service.d/app_sequence.sh
+```
+
+A simpler script that only starts the Mic Anchor service (without launching a companion app) is
+also available in [`extras/`](extras/).
 
 ## Notes and caveats
 
